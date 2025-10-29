@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Download, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Download, Loader2, Save, FileText } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useLocation, useRoute } from "wouter";
 import { toast } from "sonner";
@@ -60,7 +60,7 @@ export default function ProjectEditor() {
     },
   });
 
-  const exportMutation = trpc.export.shapefile.useMutation({
+  const exportShapefileMutation = trpc.export.shapefile.useMutation({
     onSuccess: (data) => {
       // Convert base64 to blob and download
       const byteCharacters = atob(data.data);
@@ -82,6 +82,31 @@ export default function ProjectEditor() {
     },
     onError: (error) => {
       toast.error(`Gagal export shapefile: ${error.message}`);
+    },
+  });
+
+  const exportPdfMutation = trpc.export.pdf.useMutation({
+    onSuccess: (data) => {
+      // Convert base64 to blob and download
+      const byteCharacters = atob(data.data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = data.filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("PDF berhasil diexport");
+    },
+    onError: (error) => {
+      toast.error(`Gagal export PDF: ${error.message}`);
     },
   });
 
@@ -145,7 +170,15 @@ export default function ProjectEditor() {
       toast.error("Tidak ada polygon untuk diexport");
       return;
     }
-    exportMutation.mutate({ projectId });
+    exportShapefileMutation.mutate({ projectId });
+  };
+
+  const handleExportPDF = () => {
+    if (!currentPolygonId) {
+      toast.error("Tidak ada polygon untuk diexport");
+      return;
+    }
+    exportPdfMutation.mutate({ projectId, polygonId: currentPolygonId });
   };
 
   if (authLoading || projectLoading) {
@@ -192,17 +225,31 @@ export default function ProjectEditor() {
                 )}
               </div>
             </div>
-            <Button
-              onClick={handleExportShapefile}
-              disabled={exportMutation.isPending || !polygons || polygons.length === 0}
-            >
-              {exportMutation.isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Download className="h-4 w-4 mr-2" />
-              )}
-              Export Shapefile
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleExportPDF}
+                disabled={exportPdfMutation.isPending || !currentPolygonId}
+                variant="outline"
+              >
+                {exportPdfMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <FileText className="h-4 w-4 mr-2" />
+                )}
+                Export PDF
+              </Button>
+              <Button
+                onClick={handleExportShapefile}
+                disabled={exportShapefileMutation.isPending || !polygons || polygons.length === 0}
+              >
+                {exportShapefileMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                Export Shapefile
+              </Button>
+            </div>
           </div>
         </div>
       </div>

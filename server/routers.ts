@@ -6,6 +6,7 @@ import { z } from "zod";
 import * as db from "./db";
 import shpwrite from "@mapbox/shp-write";
 import JSZip from "jszip";
+import { generateMapPDF } from "./pdfGenerator";
 
 export const appRouter = router({
   system: systemRouter,
@@ -123,6 +124,41 @@ export const appRouter = router({
   }),
 
   export: router({
+    pdf: protectedProcedure
+      .input(z.object({ 
+        projectId: z.number(),
+        polygonId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const project = await db.getProjectById(input.projectId);
+        if (!project) {
+          throw new Error("Project not found");
+        }
+
+        const polygonData = await db.getProjectPolygons(input.projectId);
+        const polygon = polygonData.find(p => p.id === input.polygonId);
+        
+        if (!polygon) {
+          throw new Error("Polygon not found");
+        }
+
+        // Generate PDF
+        const pdfBuffer = await generateMapPDF({
+          projectName: project.name,
+          polygon,
+          coordinateSystem: project.coordinateSystem,
+        });
+        
+        // Convert to base64 for transmission
+        const base64 = pdfBuffer.toString('base64');
+        
+        return {
+          success: true,
+          filename: `${project.name}_Peta_Tapak_Proyek.pdf`,
+          data: base64,
+        };
+      }),
+
     shapefile: protectedProcedure
       .input(z.object({ projectId: z.number() }))
       .mutation(async ({ input }) => {

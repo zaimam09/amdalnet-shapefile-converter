@@ -29,3 +29,9 @@
 
 - [x] Fix error Blob conversion di shapefile export
 - [x] Fix error require is not defined di FileUploader
+
+## Fitur yang Sedang Dikerjakan
+
+- [x] Implementasi export peta PDF A3 landscape (420x297mm)
+- [x] Elemen kartografi: header, peta, panel info, legenda, skala, north arrow
+- [x] Tabel atribut dan footer dengan tanggal pembuatan
