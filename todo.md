@@ -72,3 +72,13 @@
 - [x] Sesuaikan layout PDF dengan contoh (format yang sama persis)
 - [x] Pastikan data AI ekstraksi tersimpan di database
 - [x] Format koordinat dalam derajat-menit-detik di tabel
+
+## Perbaikan Berdasarkan Review
+
+- [x] Perbaiki format shapefile agar sesuai standar OSS (validasi 5 file)
+- [x] Perbaiki AI ekstraksi agar bisa ambil NIB dengan akurat
+- [x] Auto-generate KETERANGAN dari alamat lengkap hasil ekstraksi AI
+- [x] Tambahkan tampilan luasan dalam m² selain hektar
+- [x] Perbaiki layout PDF A3 dengan 5 section horizontal di panel kanan
+- [ ] Tambahkan basemap satellite imagery pada peta (memerlukan tile service)
+- [x] Sesuaikan border dan grid peta dengan contoh gambar

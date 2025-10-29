@@ -236,7 +236,7 @@ export const appRouter = router({
           // Use LLM to analyze the document
           const { invokeLLM } = await import('./_core/llm');
           
-          const prompt = `Analisis dokumen PKKPR atau NIB berikut dan ekstrak informasi dalam format JSON.\n\nInformasi yang harus diekstrak:\n- pemrakarsa: Nama Pelaku Usaha/Pemrakarsa\n- nib: Nomor Induk Berusaha (jika ada)\n- kbli: Kode KBLI (jika ada)\n- kegiatan: Nama/Judul kegiatan atau KBLI\n- provinsi: Nama Provinsi\n- kabupatenKota: Nama Kabupaten/Kota (jika ada)\n- kecamatan: Nama Kecamatan (jika ada)\n- desaKelurahan: Nama Desa/Kelurahan (jika ada)\n- alamat: Alamat lengkap (jika ada)\n- luasTanah: Luas tanah dalam m2 atau ha (jika ada)\n- tahun: Tahun dari tanggal dokumen\n\nPenting:\n- Jika tidak ada data, isi dengan string kosong \"\"\n- Untuk tahun, ambil dari tanggal dokumen atau tahun saat ini\n- Untuk kegiatan, gunakan judul KBLI atau deskripsi kegiatan yang ada\n\nDokumen: ${fileName}`;
+          const prompt = `Analisis dokumen PKKPR atau NIB berikut dan ekstrak informasi dalam format JSON.\n\nInformasi yang harus diekstrak:\n- pemrakarsa: Nama Pelaku Usaha/Pemrakarsa (cari di bagian "Nama Pelaku Usaha" atau "Pemrakarsa")\n- nib: Nomor Induk Berusaha 13 digit (cari angka 13 digit yang biasanya ada label "NIB" atau "Nomor Induk Berusaha", PENTING: harus 13 digit angka)\n- kbli: Kode KBLI 5 digit (cari kode yang ada label "KBLI" atau "Kode KBLI")\n- kegiatan: Nama/Judul kegiatan atau deskripsi KBLI\n- provinsi: Nama Provinsi (cari di bagian lokasi/alamat)\n- kabupatenKota: Nama Kabupaten/Kota (cari di bagian lokasi/alamat)\n- kecamatan: Nama Kecamatan (cari di bagian lokasi/alamat)\n- desaKelurahan: Nama Desa/Kelurahan (cari di bagian lokasi/alamat)\n- alamat: Alamat lengkap termasuk jalan, RT/RW, Desa/Kelurahan, Kecamatan, Kabupaten/Kota, Provinsi\n- luasTanah: Luas tanah dalam m2 atau ha (cari di bagian luas lahan/tanah)\n- tahun: Tahun dari tanggal dokumen (ambil tahun dari tanggal terbit dokumen)\n\nPenting:\n- Jika tidak ada data, isi dengan string kosong \"\"\n- NIB HARUS 13 digit angka, jika tidak ketemu atau bukan 13 digit, isi kosong\n- Untuk alamat, gabungkan semua komponen alamat menjadi satu string lengkap\n- Perhatikan dengan teliti setiap angka dan kode yang ada di dokumen\n\nDokumen: ${fileName}`;
 
           const response = await invokeLLM({
             messages: [
@@ -286,14 +286,24 @@ export const appRouter = router({
           const contentText = typeof messageContent === 'string' ? messageContent : JSON.stringify(messageContent);
           const extractedData = JSON.parse(contentText || '{}');
           
-          // Generate KETERANGAN based on location data
+          // Generate KETERANGAN based on location data (alamat lengkap)
           let keterangan = '';
           if (extractedData.alamat) {
-            keterangan = `Untuk tapak proyek dalam satu wilayah Kab/Kota, diisi dengan alamat lokasi ${extractedData.alamat}.`;
-          } else if (extractedData.kabupatenKota) {
-            keterangan = `Lokasi di ${extractedData.kabupatenKota}, ${extractedData.provinsi}.`;
+            // Use full address as KETERANGAN
+            keterangan = extractedData.alamat;
           } else {
-            keterangan = `Lokasi di Provinsi ${extractedData.provinsi}.`;
+            // Build address from components
+            const addressParts = [];
+            if (extractedData.desaKelurahan) addressParts.push(`Desa/Kel. ${extractedData.desaKelurahan}`);
+            if (extractedData.kecamatan) addressParts.push(`Kec. ${extractedData.kecamatan}`);
+            if (extractedData.kabupatenKota) addressParts.push(extractedData.kabupatenKota);
+            if (extractedData.provinsi) addressParts.push(extractedData.provinsi);
+            
+            if (addressParts.length > 0) {
+              keterangan = addressParts.join(', ');
+            } else {
+              keterangan = 'Alamat belum tersedia';
+            }
           }
           
           return {

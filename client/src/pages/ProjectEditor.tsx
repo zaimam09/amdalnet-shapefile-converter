@@ -490,13 +490,23 @@ export default function ProjectEditor() {
                   <Input value="Tapak Proyek" disabled />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Luas (Hektar)</Label>
-                  <Input value={currentArea || "0.00000000000"} disabled />
-                  <p className="text-xs text-gray-500">
-                    Luas akan dihitung otomatis saat Anda menggambar polygon
-                  </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Luas (Hektar)</Label>
+                    <Input value={currentArea || "0.00000000000"} disabled />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Luas (m²)</Label>
+                    <Input 
+                      value={currentArea ? (parseFloat(currentArea) * 10000).toFixed(2) : "0.00"} 
+                      disabled 
+                    />
+                  </div>
                 </div>
+                <p className="text-xs text-gray-500 -mt-2">
+                  Luas akan dihitung otomatis saat Anda menggambar polygon
+                </p>
 
                 <Button
                   className="w-full"
