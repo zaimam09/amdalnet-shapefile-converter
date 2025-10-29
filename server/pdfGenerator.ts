@@ -13,7 +13,7 @@ export async function generateMapPDF(options: PDFMapOptions): Promise<Buffer> {
       // Create A3 landscape document (420mm x 297mm = 1191pt x 842pt at 72dpi)
       const doc = new PDFDocument({
         size: [1191, 842], // A3 landscape in points
-        margin: 40,
+        margin: 0,
         info: {
           Title: `Peta Tapak Proyek - ${options.projectName}`,
           Author: 'AMDALNET Shapefile Converter',
@@ -27,40 +27,28 @@ export async function generateMapPDF(options: PDFMapOptions): Promise<Buffer> {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
-      // Header
-      drawHeader(doc, options.projectName);
-
-      // Main content area
-      const contentY = 120;
+      // Layout constants
+      const pageWidth = 1191;
+      const pageHeight = 842;
+      const margin = 20;
       
-      // Map area (left side - 60% width)
-      const mapWidth = 680;
-      const mapHeight = 500;
-      const mapX = 50;
-      const mapY = contentY;
+      // Main map area (left side - 70%)
+      const mapX = margin;
+      const mapY = margin;
+      const mapWidth = 820;
+      const mapHeight = pageHeight - (2 * margin);
       
-      drawMapArea(doc, mapX, mapY, mapWidth, mapHeight, options.polygon);
+      // Info panel (right side - 30%)
+      const panelX = mapX + mapWidth + margin;
+      const panelY = margin;
+      const panelWidth = pageWidth - panelX - margin;
+      const panelHeight = pageHeight - (2 * margin);
 
-      // Info panel (right side - 35% width)
-      const panelX = mapX + mapWidth + 30;
-      const panelWidth = 380;
-      
-      drawInfoPanel(doc, panelX, mapY, panelWidth, options);
+      // Draw main map area with border
+      drawMapWithBorder(doc, mapX, mapY, mapWidth, mapHeight, options.polygon);
 
-      // Legend
-      drawLegend(doc, mapX, mapY + mapHeight + 20);
-
-      // Scale bar
-      drawScaleBar(doc, mapX + 20, mapY + mapHeight - 40);
-
-      // North arrow
-      drawNorthArrow(doc, mapX + mapWidth - 60, mapY + 20);
-
-      // Attribute table
-      drawAttributeTable(doc, mapX, mapY + mapHeight + 80, mapWidth, options.polygon);
-
-      // Footer
-      drawFooter(doc);
+      // Draw right panel
+      drawRightPanel(doc, panelX, panelY, panelWidth, panelHeight, options);
 
       doc.end();
     } catch (error) {
@@ -69,24 +57,7 @@ export async function generateMapPDF(options: PDFMapOptions): Promise<Buffer> {
   });
 }
 
-function drawHeader(doc: PDFKit.PDFDocument, projectName: string) {
-  doc.fontSize(20)
-    .font('Helvetica-Bold')
-    .text('PETA TAPAK PROYEK', 50, 40, { align: 'center' });
-  
-  doc.fontSize(14)
-    .font('Helvetica')
-    .text(projectName, 50, 70, { align: 'center' });
-  
-  // Horizontal line
-  doc.strokeColor('#2563eb')
-    .lineWidth(2)
-    .moveTo(50, 100)
-    .lineTo(1141, 100)
-    .stroke();
-}
-
-function drawMapArea(
+function drawMapWithBorder(
   doc: PDFKit.PDFDocument,
   x: number,
   y: number,
@@ -94,33 +65,48 @@ function drawMapArea(
   height: number,
   polygon: Polygon
 ) {
-  // Draw map border
+  // Outer border (thick black)
   doc.rect(x, y, width, height)
-    .strokeColor('#333')
-    .lineWidth(1)
+    .lineWidth(3)
+    .strokeColor('#000')
     .stroke();
 
-  // Draw grid background
-  doc.strokeColor('#e5e7eb')
+  // Inner map area with coordinate grid
+  const gridMargin = 40; // Space for coordinate labels
+  const innerX = x + gridMargin;
+  const innerY = y + gridMargin;
+  const innerWidth = width - (2 * gridMargin);
+  const innerHeight = height - (2 * gridMargin);
+
+  // Draw inner border
+  doc.rect(innerX, innerY, innerWidth, innerHeight)
+    .lineWidth(2)
+    .strokeColor('#000')
+    .stroke();
+
+  // Draw grid lines
+  doc.strokeColor('#cccccc')
     .lineWidth(0.5);
   
+  const gridSteps = 10;
+  
   // Vertical grid lines
-  for (let i = 0; i <= 10; i++) {
-    const gridX = x + (width / 10) * i;
-    doc.moveTo(gridX, y)
-      .lineTo(gridX, y + height)
+  for (let i = 1; i < gridSteps; i++) {
+    const gridX = innerX + (innerWidth / gridSteps) * i;
+    doc.moveTo(gridX, innerY)
+      .lineTo(gridX, innerY + innerHeight)
       .stroke();
   }
   
   // Horizontal grid lines
-  for (let i = 0; i <= 10; i++) {
-    const gridY = y + (height / 10) * i;
-    doc.moveTo(x, gridY)
-      .lineTo(x + width, gridY)
+  for (let i = 1; i < gridSteps; i++) {
+    const gridY = innerY + (innerHeight / gridSteps) * i;
+    doc.moveTo(innerX, gridY)
+      .lineTo(innerX + innerWidth, gridY)
       .stroke();
   }
 
-  // Draw polygon representation (simplified)
+  // Draw polygon
   try {
     const geometry = JSON.parse(polygon.geometry);
     if (geometry.type === 'Polygon' && geometry.coordinates && geometry.coordinates[0]) {
@@ -138,7 +124,7 @@ function drawMapArea(
       });
       
       // Add padding
-      const padding = 0.1;
+      const padding = 0.15;
       const lonRange = maxLon - minLon;
       const latRange = maxLat - minLat;
       minLon -= lonRange * padding;
@@ -146,23 +132,54 @@ function drawMapArea(
       minLat -= latRange * padding;
       maxLat += latRange * padding;
       
+      // Draw coordinate labels
+      doc.fontSize(8)
+        .fillColor('#000')
+        .font('Helvetica');
+      
+      // Top and bottom coordinates (longitude)
+      const lonLabels = 4;
+      for (let i = 0; i <= lonLabels; i++) {
+        const lon = minLon + (maxLon - minLon) * (i / lonLabels);
+        const labelX = innerX + (innerWidth * i / lonLabels);
+        const lonText = formatCoordinate(lon, 'E');
+        
+        // Top
+        doc.text(lonText, labelX - 30, y + 10, { width: 60, align: 'center' });
+        // Bottom
+        doc.text(lonText, labelX - 30, y + height - 25, { width: 60, align: 'center' });
+      }
+      
+      // Left and right coordinates (latitude)
+      const latLabels = 4;
+      for (let i = 0; i <= latLabels; i++) {
+        const lat = maxLat - (maxLat - minLat) * (i / latLabels);
+        const labelY = innerY + (innerHeight * i / latLabels);
+        const latText = formatCoordinate(lat, 'S');
+        
+        // Left
+        doc.text(latText, x + 5, labelY - 5, { width: 30, align: 'left' });
+        // Right
+        doc.text(latText, x + width - 35, labelY - 5, { width: 30, align: 'right' });
+      }
+      
       // Scale coordinates to map area
-      const scaleX = width / (maxLon - minLon);
-      const scaleY = height / (maxLat - minLat);
+      const scaleX = innerWidth / (maxLon - minLon);
+      const scaleY = innerHeight / (maxLat - minLat);
       const scale = Math.min(scaleX, scaleY);
       
       // Center the polygon
-      const offsetX = x + (width - (maxLon - minLon) * scale) / 2;
-      const offsetY = y + (height - (maxLat - minLat) * scale) / 2;
+      const offsetX = innerX + (innerWidth - (maxLon - minLon) * scale) / 2;
+      const offsetY = innerY + (innerHeight - (maxLat - minLat) * scale) / 2;
       
-      // Draw polygon
-      doc.fillColor('#22c55e', 0.3)
-        .strokeColor('#16a34a')
+      // Draw polygon with yellow fill and black border
+      doc.fillColor('#FFD700', 1) // Yellow
+        .strokeColor('#000000')
         .lineWidth(2);
       
       coords.forEach(([lon, lat]: [number, number], index: number) => {
         const px = offsetX + (lon - minLon) * scale;
-        const py = offsetY + height - (lat - minLat) * scale; // Flip Y axis
+        const py = offsetY + innerHeight - (lat - minLat) * scale; // Flip Y axis
         
         if (index === 0) {
           doc.moveTo(px, py);
@@ -178,224 +195,298 @@ function drawMapArea(
     console.error('Error drawing polygon:', error);
   }
 
-  // Map title
-  doc.fontSize(10)
-    .fillColor('#000')
-    .font('Helvetica-Bold')
-    .text('Peta Lokasi Tapak Proyek', x + 10, y + 10);
+  // Draw scale bar at bottom left
+  const scaleX = innerX + 20;
+  const scaleY = innerY + innerHeight - 50;
+  drawScaleBar(doc, scaleX, scaleY);
+
+  // Draw north arrow at top right
+  const northX = innerX + innerWidth - 50;
+  const northY = innerY + 20;
+  drawNorthArrow(doc, northX, northY);
 }
 
-function drawInfoPanel(
+function drawRightPanel(
   doc: PDFKit.PDFDocument,
   x: number,
   y: number,
   width: number,
+  height: number,
   options: PDFMapOptions
 ) {
-  const { polygon, coordinateSystem } = options;
+  const { projectName, polygon, coordinateSystem } = options;
+  
+  let currentY = y;
+  
+  // Title box
+  doc.rect(x, currentY, width, 80)
+    .fillColor('#ffffff')
+    .fill()
+    .strokeColor('#000')
+    .lineWidth(2)
+    .stroke();
+  
+  doc.fontSize(14)
+    .font('Helvetica-Bold')
+    .fillColor('#000')
+    .text('PETA LOKASI KEGIATAN', x + 10, currentY + 10, { width: width - 20, align: 'center' });
   
   doc.fontSize(12)
-    .font('Helvetica-Bold')
-    .fillColor('#000')
-    .text('INFORMASI TAPAK PROYEK', x, y);
+    .text(projectName.toUpperCase(), x + 10, currentY + 35, { width: width - 20, align: 'center' });
   
-  let currentY = y + 25;
-  const lineHeight = 20;
+  doc.fontSize(10)
+    .font('Helvetica')
+    .text(polygon.kegiatan.toUpperCase(), x + 10, currentY + 55, { width: width - 20, align: 'center' });
   
-  const info = [
-    { label: 'Nama Layer', value: polygon.layer },
-    { label: 'Sistem Koordinat', value: coordinateSystem },
-    { label: 'Luas Total', value: `${parseFloat(polygon.area).toFixed(2)} ha` },
-    { label: 'ID Tapak Proyek', value: polygon.objectId.toString() },
-    { label: 'Pemrakarsa', value: polygon.pemrakarsa },
-    { label: 'Kegiatan', value: polygon.kegiatan },
-    { label: 'Tahun', value: polygon.tahun.toString() },
-    { label: 'Provinsi', value: polygon.provinsi },
+  currentY += 90;
+  
+  // Info section
+  doc.rect(x, currentY, width, 120)
+    .fillColor('#ffffff')
+    .fill()
+    .strokeColor('#000')
+    .lineWidth(2)
+    .stroke();
+  
+  const infoY = currentY + 10;
+  doc.fontSize(9)
+    .font('Helvetica');
+  
+  const infoItems = [
+    { label: 'Skala', value: '1:10,000 (A3)' },
+    { label: 'Proyeksi', value: 'Transverse Mercator' },
+    { label: 'Sistem Grid', value: 'Geografis' },
+    { label: 'Datum Horizontal', value: coordinateSystem },
   ];
   
-  doc.fontSize(9).font('Helvetica');
-  
-  info.forEach(({ label, value }) => {
-    doc.font('Helvetica-Bold')
-      .text(label + ':', x, currentY, { width: width, continued: false });
-    
+  let infoLineY = infoY;
+  infoItems.forEach(({ label, value }) => {
     doc.font('Helvetica')
-      .text(value, x, currentY + 12, { width: width });
-    
-    currentY += lineHeight + 12;
+      .text(label, x + 15, infoLineY, { width: 80, continued: true })
+      .text(': ' + value, { width: width - 100 });
+    infoLineY += 20;
   });
   
-  // Keterangan section
-  currentY += 10;
-  doc.font('Helvetica-Bold')
-    .text('Keterangan:', x, currentY);
+  currentY += 130;
   
-  doc.font('Helvetica')
-    .fontSize(8)
-    .text(polygon.keterangan, x, currentY + 15, { 
-      width: width,
-      align: 'justify',
-    });
-}
-
-function drawLegend(doc: PDFKit.PDFDocument, x: number, y: number) {
+  // Legend section
+  doc.rect(x, currentY, width, 120)
+    .fillColor('#ffffff')
+    .fill()
+    .strokeColor('#000')
+    .lineWidth(2)
+    .stroke();
+  
   doc.fontSize(10)
     .font('Helvetica-Bold')
-    .fillColor('#000')
-    .text('LEGENDA', x, y);
+    .text('KETERANGAN', x + 10, currentY + 10);
   
-  // Polygon symbol
-  doc.rect(x, y + 20, 30, 20)
-    .fillColor('#22c55e', 0.3)
-    .strokeColor('#16a34a')
+  currentY += 35;
+  
+  // Legend items
+  const legendItems = [
+    { color: '#000000', label: 'Batas Kelurahan/Desa', type: 'line' },
+    { color: '#0000FF', label: 'Sungai', type: 'line' },
+    { color: '#808080', label: 'Jalan', type: 'line' },
+    { color: '#FFD700', label: 'Tapak/Lokasi Kegiatan', type: 'polygon' },
+  ];
+  
+  legendItems.forEach((item) => {
+    if (item.type === 'line') {
+      doc.moveTo(x + 15, currentY + 5)
+        .lineTo(x + 35, currentY + 5)
+        .strokeColor(item.color)
+        .lineWidth(2)
+        .stroke();
+    } else {
+      doc.rect(x + 15, currentY, 20, 10)
+        .fillColor(item.color)
+        .strokeColor('#000')
+        .lineWidth(1)
+        .fillAndStroke();
+    }
+    
+    doc.fillColor('#000')
+      .fontSize(8)
+      .font('Helvetica')
+      .text(item.label, x + 45, currentY + 2);
+    
+    currentY += 18;
+  });
+  
+  currentY += 10;
+  
+  // Coordinate table
+  const tableY = currentY;
+  const tableHeight = height - (currentY - y) - 150;
+  
+  doc.rect(x, tableY, width, tableHeight)
+    .fillColor('#ffffff')
+    .fill()
+    .strokeColor('#000')
     .lineWidth(2)
-    .fillAndStroke();
+    .stroke();
+  
+  doc.fontSize(9)
+    .font('Helvetica-Bold')
+    .text('Titik Ikat Tapak/Lokasi Kegiatan', x + 10, tableY + 10);
+  
+  // Draw coordinate table
+  const tableStartY = tableY + 30;
+  const colWidths = [30, (width - 60) / 2, (width - 60) / 2];
+  
+  // Table header
+  doc.rect(x, tableStartY, colWidths[0], 20)
+    .fillColor('#e0e0e0')
+    .fill()
+    .strokeColor('#000')
+    .lineWidth(0.5)
+    .stroke();
+  
+  doc.rect(x + colWidths[0], tableStartY, colWidths[1], 20)
+    .fillColor('#e0e0e0')
+    .fill()
+    .strokeColor('#000')
+    .lineWidth(0.5)
+    .stroke();
+  
+  doc.rect(x + colWidths[0] + colWidths[1], tableStartY, colWidths[2], 20)
+    .fillColor('#e0e0e0')
+    .fill()
+    .strokeColor('#000')
+    .lineWidth(0.5)
+    .stroke();
   
   doc.fillColor('#000')
+    .fontSize(7)
+    .font('Helvetica-Bold')
+    .text('No.', x + 5, tableStartY + 6, { width: colWidths[0] - 10, align: 'center' })
+    .text('X', x + colWidths[0] + 5, tableStartY + 6, { width: colWidths[1] - 10, align: 'center' })
+    .text('Y', x + colWidths[0] + colWidths[1] + 5, tableStartY + 6, { width: colWidths[2] - 10, align: 'center' });
+  
+  // Table rows (first 10 coordinates)
+  try {
+    const geometry = JSON.parse(polygon.geometry);
+    if (geometry.type === 'Polygon' && geometry.coordinates && geometry.coordinates[0]) {
+      const coords = geometry.coordinates[0].slice(0, 10); // First 10 points
+      
+      let rowY = tableStartY + 20;
+      coords.forEach(([lon, lat]: [number, number], index: number) => {
+        const fillColor = index % 2 === 0 ? '#ffffff' : '#f5f5f5';
+        
+        doc.rect(x, rowY, colWidths[0], 18)
+          .fillColor(fillColor)
+          .fill()
+          .strokeColor('#000')
+          .lineWidth(0.5)
+          .stroke();
+        
+        doc.rect(x + colWidths[0], rowY, colWidths[1], 18)
+          .fillColor(fillColor)
+          .fill()
+          .strokeColor('#000')
+          .lineWidth(0.5)
+          .stroke();
+        
+        doc.rect(x + colWidths[0] + colWidths[1], rowY, colWidths[2], 18)
+          .fillColor(fillColor)
+          .fill()
+          .strokeColor('#000')
+          .lineWidth(0.5)
+          .stroke();
+        
+        doc.fillColor('#000')
+          .fontSize(6)
+          .font('Helvetica')
+          .text((index + 1).toString(), x + 5, rowY + 5, { width: colWidths[0] - 10, align: 'center' })
+          .text(formatCoordinate(lon, 'E'), x + colWidths[0] + 5, rowY + 5, { width: colWidths[1] - 10, align: 'center' })
+          .text(formatCoordinate(lat, 'S'), x + colWidths[0] + colWidths[1] + 5, rowY + 5, { width: colWidths[2] - 10, align: 'center' });
+        
+        rowY += 18;
+      });
+    }
+  } catch (error) {
+    console.error('Error drawing coordinate table:', error);
+  }
+  
+  // Inset map (small Indonesia map)
+  const insetY = height - 140;
+  const insetHeight = 120;
+  
+  doc.rect(x, insetY, width, insetHeight)
+    .fillColor('#ffffff')
+    .fill()
+    .strokeColor('#000')
+    .lineWidth(2)
+    .stroke();
+  
+  doc.fontSize(8)
     .font('Helvetica')
-    .fontSize(9)
-    .text('Tapak Proyek', x + 40, y + 25);
+    .text('Peta Orientasi Indonesia', x + 10, insetY + insetHeight - 15);
+  
+  // Footer
+  const footerY = height - 15;
+  doc.fontSize(7)
+    .font('Helvetica')
+    .fillColor('#666')
+    .text('Created by - AMDALNET Shapefile Converter', x, footerY, { width: width, align: 'center' });
 }
 
 function drawScaleBar(doc: PDFKit.PDFDocument, x: number, y: number) {
   const barWidth = 100;
-  const barHeight = 10;
+  const barHeight = 8;
   
-  // Scale bar
+  // Black section
   doc.rect(x, y, barWidth / 2, barHeight)
     .fillColor('#000')
     .fill();
   
+  // White section
   doc.rect(x + barWidth / 2, y, barWidth / 2, barHeight)
     .fillColor('#fff')
     .strokeColor('#000')
     .lineWidth(1)
     .fillAndStroke();
   
+  // Border around entire scale bar
+  doc.rect(x, y, barWidth, barHeight)
+    .strokeColor('#000')
+    .lineWidth(1)
+    .stroke();
+  
   // Labels
   doc.fillColor('#000')
-    .fontSize(8)
+    .fontSize(7)
     .font('Helvetica')
-    .text('0', x - 5, y + barHeight + 5)
-    .text('1 km', x + barWidth - 15, y + barHeight + 5);
-  
-  doc.fontSize(9)
-    .font('Helvetica-Bold')
-    .text('SKALA', x + 15, y - 15);
+    .text('0', x - 5, y + barHeight + 3)
+    .text('500m', x + barWidth / 2 - 15, y + barHeight + 3)
+    .text('1km', x + barWidth - 15, y + barHeight + 3);
 }
 
 function drawNorthArrow(doc: PDFKit.PDFDocument, x: number, y: number) {
-  // Simple north arrow
-  doc.fontSize(20)
-    .font('Helvetica-Bold')
+  // Draw a simple north arrow
+  const size = 30;
+  
+  // Arrow triangle
+  doc.moveTo(x, y)
+    .lineTo(x - 10, y + size)
+    .lineTo(x + 10, y + size)
+    .closePath()
     .fillColor('#000')
-    .text('↑', x, y);
-  
-  doc.fontSize(8)
-    .font('Helvetica')
-    .text('U', x + 5, y + 25);
-}
-
-function drawAttributeTable(
-  doc: PDFKit.PDFDocument,
-  x: number,
-  y: number,
-  width: number,
-  polygon: Polygon
-) {
-  doc.fontSize(10)
-    .font('Helvetica-Bold')
-    .fillColor('#000')
-    .text('TABEL ATRIBUT', x, y);
-  
-  const tableY = y + 20;
-  const rowHeight = 20;
-  const colWidths = [150, width - 150];
-  
-  const attributes = [
-    ['OBJECTID_1', polygon.objectId.toString()],
-    ['PEMRAKARSA', polygon.pemrakarsa],
-    ['KEGIATAN', polygon.kegiatan],
-    ['TAHUN', polygon.tahun.toString()],
-    ['PROVINSI', polygon.provinsi],
-    ['KETERANGAN', polygon.keterangan],
-    ['LAYER', polygon.layer],
-    ['AREA (ha)', parseFloat(polygon.area).toFixed(11)],
-  ];
-  
-  // Table header
-  doc.rect(x, tableY, colWidths[0], rowHeight)
-    .fillColor('#2563eb')
     .fill();
   
-  doc.rect(x + colWidths[0], tableY, colWidths[1], rowHeight)
-    .fillColor('#2563eb')
-    .fill();
-  
-  doc.fillColor('#fff')
-    .fontSize(9)
+  // N label
+  doc.fontSize(12)
     .font('Helvetica-Bold')
-    .text('Field', x + 5, tableY + 6)
-    .text('Value', x + colWidths[0] + 5, tableY + 6);
-  
-  // Table rows
-  let currentY = tableY + rowHeight;
-  
-  attributes.forEach(([field, value], index) => {
-    const fillColor = index % 2 === 0 ? '#f3f4f6' : '#fff';
-    
-    doc.rect(x, currentY, colWidths[0], rowHeight)
-      .fillColor(fillColor)
-      .fill();
-    
-    doc.rect(x + colWidths[0], currentY, colWidths[1], rowHeight)
-      .fillColor(fillColor)
-      .fill();
-    
-    // Borders
-    doc.rect(x, currentY, colWidths[0], rowHeight)
-      .strokeColor('#d1d5db')
-      .lineWidth(0.5)
-      .stroke();
-    
-    doc.rect(x + colWidths[0], currentY, colWidths[1], rowHeight)
-      .strokeColor('#d1d5db')
-      .lineWidth(0.5)
-      .stroke();
-    
-    doc.fillColor('#000')
-      .fontSize(8)
-      .font('Helvetica-Bold')
-      .text(field, x + 5, currentY + 6, { width: colWidths[0] - 10 });
-    
-    doc.font('Helvetica')
-      .text(value, x + colWidths[0] + 5, currentY + 6, { width: colWidths[1] - 10 });
-    
-    currentY += rowHeight;
-  });
+    .fillColor('#000')
+    .text('N', x - 5, y + size + 5);
 }
 
-function drawFooter(doc: PDFKit.PDFDocument) {
-  const footerY = 802;
+function formatCoordinate(value: number, direction: 'E' | 'S'): string {
+  const degrees = Math.floor(Math.abs(value));
+  const minutesDecimal = (Math.abs(value) - degrees) * 60;
+  const minutes = Math.floor(minutesDecimal);
+  const seconds = ((minutesDecimal - minutes) * 60).toFixed(3);
   
-  doc.fontSize(8)
-    .font('Helvetica')
-    .fillColor('#666')
-    .text(
-      `Tanggal Pembuatan: ${new Date().toLocaleDateString('id-ID', { 
-        day: '2-digit', 
-        month: 'long', 
-        year: 'numeric' 
-      })}`,
-      50,
-      footerY,
-      { align: 'left' }
-    );
-  
-  doc.text(
-    'Sumber Data: AMDALNET Shapefile Converter',
-    50,
-    footerY,
-    { align: 'right' }
-  );
+  return `${degrees}° ${minutes}' ${seconds}" ${direction}`;
 }

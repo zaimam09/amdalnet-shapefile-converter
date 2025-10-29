@@ -35,3 +35,11 @@
 - [x] Implementasi export peta PDF A3 landscape (420x297mm)
 - [x] Elemen kartografi: header, peta, panel info, legenda, skala, north arrow
 - [x] Tabel atribut dan footer dengan tanggal pembuatan
+
+## Bug Layout PDF
+
+- [x] Perbaiki layout PDF agar rapi 1 lembar seperti contoh
+- [x] Peta di kiri (70%), panel info di kanan (30%)
+- [x] Tambahkan peta inset lokasi Indonesia
+- [x] Tambahkan koordinat grid di border peta
+- [x] Tambahkan tabel koordinat titik polygon
