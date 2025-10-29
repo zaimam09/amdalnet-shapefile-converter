@@ -5,6 +5,8 @@ interface PDFMapOptions {
   projectName: string;
   polygon: Polygon;
   coordinateSystem: string;
+  userName: string;
+  userEmail: string;
 }
 
 export async function generateMapPDF(options: PDFMapOptions): Promise<Buffer> {
@@ -410,8 +412,8 @@ function drawRightPanel(
   }
   
   // Inset map (small Indonesia map)
-  const insetY = height - 140;
-  const insetHeight = 120;
+  const insetY = height - 200;
+  const insetHeight = 140;
   
   doc.rect(x, insetY, width, insetHeight)
     .fillColor('#ffffff')
@@ -424,12 +426,50 @@ function drawRightPanel(
     .font('Helvetica')
     .text('Peta Orientasi Indonesia', x + 10, insetY + insetHeight - 15);
   
-  // Footer
-  const footerY = height - 15;
+  // User info and date section
+  const userInfoY = height - 50;
+  
+  doc.rect(x, userInfoY, width, 35)
+    .fillColor('#f5f5f5')
+    .fill()
+
+    .strokeColor('#000')
+    .lineWidth(1)
+    .stroke();
+  
+  doc.fontSize(7)
+    .font('Helvetica-Bold')
+    .fillColor('#000')
+    .text('Dibuat oleh:', x + 10, userInfoY + 5);
+  
+  doc.fontSize(7)
+    .font('Helvetica')
+    .text(options.userName, x + 10, userInfoY + 15);
+  
+  if (options.userEmail) {
+    doc.text(options.userEmail, x + 10, userInfoY + 25);
+  }
+  
+  // Date
+  const dateStr = new Date().toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  
   doc.fontSize(7)
     .font('Helvetica')
     .fillColor('#666')
-    .text('Created by - AMDALNET Shapefile Converter', x, footerY, { width: width, align: 'center' });
+    .text(`Tanggal: ${dateStr}`, x + 10, userInfoY + 40, { width: width - 20, align: 'left' });
+  
+  // Footer
+  const footerY = height - 8;
+  doc.fontSize(6)
+    .font('Helvetica')
+    .fillColor('#999')
+    .text('Created by AMDALNET Shapefile Converter', x, footerY, { width: width, align: 'center' });
 }
 
 function drawScaleBar(doc: PDFKit.PDFDocument, x: number, y: number) {

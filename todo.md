@@ -43,3 +43,8 @@
 - [x] Tambahkan peta inset lokasi Indonesia
 - [x] Tambahkan koordinat grid di border peta
 - [x] Tambahkan tabel koordinat titik polygon
+
+## Fitur Tambahan PDF
+
+- [x] Tambahkan informasi pengguna (nama, email) di footer panel kanan
+- [x] Tambahkan tanggal pembuatan dokumen dengan format lengkap

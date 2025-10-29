@@ -129,7 +129,7 @@ export const appRouter = router({
         projectId: z.number(),
         polygonId: z.number(),
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const project = await db.getProjectById(input.projectId);
         if (!project) {
           throw new Error("Project not found");
@@ -147,6 +147,8 @@ export const appRouter = router({
           projectName: project.name,
           polygon,
           coordinateSystem: project.coordinateSystem,
+          userName: ctx.user.name || 'User',
+          userEmail: ctx.user.email || '',
         });
         
         // Convert to base64 for transmission
