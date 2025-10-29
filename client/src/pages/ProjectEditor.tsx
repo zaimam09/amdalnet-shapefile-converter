@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useLocation, useRoute } from "wouter";
 import { toast } from "sonner";
 import MapEditor from "@/components/MapEditor";
+import FileUploader from "@/components/FileUploader";
 import { getLoginUrl } from "@/const";
 
 export default function ProjectEditor() {
@@ -208,12 +209,26 @@ export default function ProjectEditor() {
 
       <div className="container py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
+            <FileUploader
+              onFileLoaded={(geometry, area, attributes) => {
+                setCurrentGeometry(geometry);
+                setCurrentArea(area);
+                if (attributes) {
+                  if (attributes.pemrakarsa) setPemrakarsa(attributes.pemrakarsa);
+                  if (attributes.kegiatan) setKegiatan(attributes.kegiatan);
+                  if (attributes.tahun) setTahun(attributes.tahun);
+                  if (attributes.provinsi) setProvinsi(attributes.provinsi);
+                  if (attributes.keterangan) setKeterangan(attributes.keterangan);
+                }
+              }}
+            />
+            
             <Card>
               <CardHeader>
                 <CardTitle>Peta Tapak Proyek</CardTitle>
                 <CardDescription>
-                  Gunakan tools di kanan atas untuk menggambar polygon tapak proyek
+                  Upload file atau gunakan tools di kanan atas untuk menggambar polygon tapak proyek
                 </CardDescription>
               </CardHeader>
               <CardContent>

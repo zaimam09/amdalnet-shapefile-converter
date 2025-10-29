@@ -18,3 +18,9 @@
 - [ ] Riwayat project pengguna
 - [ ] Template project
 - [ ] Validasi sistem koordinat otomatis
+
+## Fitur Baru yang Diminta
+
+- [x] Upload file shapefile/KML/GeoJSON untuk import polygon
+- [x] Parse dan extract geometry dari file yang diupload
+- [x] Auto-fill form atribut dari data shapefile jika tersedia
