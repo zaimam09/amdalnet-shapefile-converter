@@ -82,3 +82,9 @@
 - [x] Perbaiki layout PDF A3 dengan 5 section horizontal di panel kanan
 - [ ] Tambahkan basemap satellite imagery pada peta (memerlukan tile service)
 - [x] Sesuaikan border dan grid peta dengan contoh gambar
+
+## Perbaikan Final
+
+- [x] Fix format ZIP shapefile - file langsung di root ZIP tanpa folder
+- [x] Ganti basemap ke satellite imagery (Esri World Imagery dengan labels overlay)
+- [x] Perbaiki layout PDF panel kanan agar semua section ada border dan tidak ada space kosong

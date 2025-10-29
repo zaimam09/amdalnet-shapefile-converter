@@ -201,9 +201,9 @@ export const appRouter = router({
           features,
         };
 
-        // Generate shapefile using shp-write
+        // Generate shapefile using shp-write (without folder to comply with RDTR OSS)
         const zipData = await shpwrite.zip<'arraybuffer'>(geojson, {
-          folder: "Tapak_proyek",
+          folder: "", // Empty folder so files are at root of ZIP
           types: {
             polygon: "Tapak_proyek",
           },

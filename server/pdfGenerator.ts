@@ -219,7 +219,7 @@ function drawRightPanel(
   const { projectName, polygon, coordinateSystem } = options;
   
   let currentY = y;
-  const sectionPadding = 10;
+  const sectionPadding = 0; // No padding to eliminate gaps
   
   // === SECTION 1: Title Box ===
   const section1Height = 90;
@@ -242,7 +242,7 @@ function drawRightPanel(
     .font('Helvetica')
     .text(polygon.kegiatan.toUpperCase(), x + 10, currentY + 55, { width: width - 20, align: 'center' });
   
-  currentY += section1Height + sectionPadding;
+  currentY += section1Height;
   
   // === SECTION 2: Technical Info ===
   const section2Height = 100;
@@ -271,7 +271,7 @@ function drawRightPanel(
     infoY += 18;
   });
   
-  currentY += section2Height + sectionPadding;
+  currentY += section2Height;
   
   // === SECTION 3: KETERANGAN + Coordinate Table ===
   const section3Height = 250;
@@ -403,7 +403,7 @@ function drawRightPanel(
     console.error('Error drawing coordinate table:', error);
   }
   
-  currentY += section3Height + sectionPadding;
+  currentY += section3Height;
   
   // === SECTION 4: Inset Map (Peta Orientasi Indonesia) ===
   const section4Height = 140;
@@ -426,7 +426,7 @@ function drawRightPanel(
     .text("112°15'0\"E", x + width / 2, currentY + section4Height - 10, { width: 50, align: 'center' })
     .text("112°30'0\"E", x + width - 40, currentY + section4Height - 10);
   
-  currentY += section4Height + sectionPadding;
+  currentY += section4Height;
   
   // === SECTION 5: Source & User Info ===
   const section5Height = height - currentY + y;
