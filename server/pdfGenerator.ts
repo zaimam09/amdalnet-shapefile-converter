@@ -221,8 +221,9 @@ function drawRightPanel(
   let currentY = y;
   const sectionPadding = 0; // No padding to eliminate gaps
   
-  // === SECTION 1: Title Box ===
-  const section1Height = 90;
+  // Calculate proportional heights to fill entire panel
+  const totalHeight = height;
+  const section1Height = Math.floor(totalHeight * 0.12); // 12% for title
   doc.rect(x, currentY, width, section1Height)
     .fillColor('#ffffff')
     .fill()
@@ -245,7 +246,7 @@ function drawRightPanel(
   currentY += section1Height;
   
   // === SECTION 2: Technical Info ===
-  const section2Height = 100;
+  const section2Height = Math.floor(totalHeight * 0.13); // 13% for technical info
   doc.rect(x, currentY, width, section2Height)
     .fillColor('#ffffff')
     .fill()
@@ -274,7 +275,7 @@ function drawRightPanel(
   currentY += section2Height;
   
   // === SECTION 3: KETERANGAN + Coordinate Table ===
-  const section3Height = 250;
+  const section3Height = Math.floor(totalHeight * 0.35); // 35% for keterangan + table
   doc.rect(x, currentY, width, section3Height)
     .fillColor('#ffffff')
     .fill()
@@ -406,7 +407,7 @@ function drawRightPanel(
   currentY += section3Height;
   
   // === SECTION 4: Inset Map (Peta Orientasi Indonesia) ===
-  const section4Height = 140;
+  const section4Height = Math.floor(totalHeight * 0.25); // 25% for inset map
   doc.rect(x, currentY, width, section4Height)
     .fillColor('#ffffff')
     .fill()
@@ -429,7 +430,8 @@ function drawRightPanel(
   currentY += section4Height;
   
   // === SECTION 5: Source & User Info ===
-  const section5Height = height - currentY + y;
+  // Fill remaining space to bottom
+  const section5Height = y + height - currentY;
   doc.rect(x, currentY, width, section5Height)
     .fillColor('#ffffff')
     .fill()

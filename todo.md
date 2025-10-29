@@ -88,3 +88,9 @@
 - [x] Fix format ZIP shapefile - file langsung di root ZIP tanpa folder
 - [x] Ganti basemap ke satellite imagery (Esri World Imagery dengan labels overlay)
 - [x] Perbaiki layout PDF panel kanan agar semua section ada border dan tidak ada space kosong
+
+## Bug Layout PDF Panel Kanan
+
+- [x] Masih ada space kosong besar di panel kanan
+- [x] Tinggi section tidak proporsional mengisi seluruh panel
+- [x] Perlu menyesuaikan tinggi section 3, 4, 5 agar tidak ada gap
