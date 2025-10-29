@@ -158,20 +158,18 @@ export const appRouter = router({
         };
 
         // Generate shapefile using shp-write
-        const options = {
+        const zipData = await shpwrite.zip<'arraybuffer'>(geojson, {
           folder: "Tapak_proyek",
           types: {
             polygon: "Tapak_proyek",
           },
-          compression: "DEFLATE" as const,
-          outputType: "blob" as const,
-        };
-
-        // shp-write returns a buffer
-        const shpBuffer = await shpwrite.zip(geojson, options) as any;
+          compression: "DEFLATE",
+          outputType: "arraybuffer",
+        });
         
-        // Convert to base64 for transmission
-        const base64 = Buffer.from(shpBuffer as Buffer).toString('base64');
+        // Convert to buffer and base64
+        const buffer = Buffer.from(zipData);
+        const base64 = buffer.toString('base64');
         
         return {
           success: true,

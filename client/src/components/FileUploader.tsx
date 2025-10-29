@@ -4,6 +4,7 @@ import { Upload, FileUp, Loader2 } from "lucide-react";
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import shp from "shpjs";
+import * as turf from "@turf/turf";
 
 interface FileUploaderProps {
   onFileLoaded: (geometry: any, area: string, attributes?: any) => void;
@@ -145,9 +146,6 @@ export default function FileUploader({ onFileLoaded }: FileUploaderProps) {
 
   const calculateAreaInHectares = (geometry: any): string => {
     try {
-      // Simple area calculation for polygon
-      // For production, use turf.js
-      const turf = require('@turf/turf');
       const area = turf.area(geometry);
       const hectares = area / 10000;
       return hectares.toFixed(11);

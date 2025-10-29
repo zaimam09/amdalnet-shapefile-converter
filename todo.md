@@ -24,3 +24,8 @@
 - [x] Upload file shapefile/KML/GeoJSON untuk import polygon
 - [x] Parse dan extract geometry dari file yang diupload
 - [x] Auto-fill form atribut dari data shapefile jika tersedia
+
+## Bugs yang Perlu Diperbaiki
+
+- [x] Fix error Blob conversion di shapefile export
+- [x] Fix error require is not defined di FileUploader
