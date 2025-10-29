@@ -40,20 +40,22 @@ export type InsertProject = typeof projects.$inferInsert;
 export const polygons = mysqlTable("polygons", {
   id: int("id").autoincrement().primaryKey(),
   projectId: int("projectId").notNull(),
-  
-  // AMDALNET required attributes
-  objectId: int("objectId").notNull(), // OBJECTID_1
+  objectId: int("objectId").notNull(),
   pemrakarsa: varchar("pemrakarsa", { length: 100 }).notNull(),
   kegiatan: varchar("kegiatan", { length: 254 }).notNull(),
   tahun: int("tahun").notNull(),
   provinsi: varchar("provinsi", { length: 50 }).notNull(),
   keterangan: varchar("keterangan", { length: 254 }).notNull(),
   layer: varchar("layer", { length: 50 }).notNull().default("Tapak Proyek"),
-  area: text("area").notNull(), // Store as text to preserve precision (19,11)
-  
-  // GeoJSON geometry stored as text
-  geometry: text("geometry").notNull(),
-  
+  area: varchar("area", { length: 30 }).notNull(), // Store as string to preserve precision
+  geometry: text("geometry").notNull(), // Store as GeoJSON string
+  // Additional fields from AI extraction
+  nib: varchar("nib", { length: 50 }),
+  kbli: varchar("kbli", { length: 50 }),
+  kabupatenKota: varchar("kabupatenKota", { length: 100 }),
+  kecamatan: varchar("kecamatan", { length: 100 }),
+  desaKelurahan: varchar("desaKelurahan", { length: 100 }),
+  alamat: text("alamat"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

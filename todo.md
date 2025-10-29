@@ -64,3 +64,11 @@
 - [ ] Multiple polygon support per project
 - [ ] Riwayat project pengguna
 - [ ] Template project untuk kegiatan umum
+
+## Penyesuaian dengan Contoh PDF
+
+- [x] Tambahkan field NIB, KBLI, Kabupaten/Kota, Kecamatan, Desa/Kelurahan, Alamat ke database
+- [x] Update schema polygon dengan field tambahan
+- [x] Sesuaikan layout PDF dengan contoh (format yang sama persis)
+- [x] Pastikan data AI ekstraksi tersimpan di database
+- [x] Format koordinat dalam derajat-menit-detik di tabel

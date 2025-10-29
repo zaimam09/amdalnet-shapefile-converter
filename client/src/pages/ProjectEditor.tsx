@@ -30,6 +30,12 @@ export default function ProjectEditor() {
   const [tahun, setTahun] = useState(new Date().getFullYear());
   const [provinsi, setProvinsi] = useState("");
   const [keterangan, setKeterangan] = useState("");
+  const [nib, setNib] = useState("");
+  const [kbli, setKbli] = useState("");
+  const [kabupatenKota, setKabupatenKota] = useState("");
+  const [kecamatan, setKecamatan] = useState("");
+  const [desaKelurahan, setDesaKelurahan] = useState("");
+  const [alamat, setAlamat] = useState("");
 
   const { data: project, isLoading: projectLoading } = trpc.projects.get.useQuery(
     { id: projectId },
@@ -132,6 +138,12 @@ export default function ProjectEditor() {
     setTahun(new Date().getFullYear());
     setProvinsi("");
     setKeterangan("");
+    setNib("");
+    setKbli("");
+    setKabupatenKota("");
+    setKecamatan("");
+    setDesaKelurahan("");
+    setAlamat("");
     setCurrentGeometry(null);
     setCurrentArea("");
     setCurrentPolygonId(null);
@@ -158,6 +170,12 @@ export default function ProjectEditor() {
       layer: "Tapak Proyek",
       area: currentArea,
       geometry: JSON.stringify(currentGeometry),
+      nib,
+      kbli,
+      kabupatenKota,
+      kecamatan,
+      desaKelurahan,
+      alamat,
     };
 
     if (currentPolygonId) {
@@ -290,6 +308,12 @@ export default function ProjectEditor() {
                     setTahun(data.tahun);
                     setProvinsi(data.provinsi);
                     setKeterangan(data.keterangan);
+                    if (data.nib) setNib(data.nib);
+                    if (data.kbli) setKbli(data.kbli);
+                    if (data.kabupatenKota) setKabupatenKota(data.kabupatenKota);
+                    if (data.kecamatan) setKecamatan(data.kecamatan);
+                    if (data.desaKelurahan) setDesaKelurahan(data.desaKelurahan);
+                    if (data.alamat) setAlamat(data.alamat);
                     toast.success('Data berhasil diisi otomatis dari dokumen');
                   }}
                 />
@@ -375,6 +399,75 @@ export default function ProjectEditor() {
                     value={provinsi}
                     onChange={(e) => setProvinsi(e.target.value)}
                     maxLength={50}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="nib">NIB</Label>
+                    <Input
+                      id="nib"
+                      placeholder="Nomor Induk Berusaha"
+                      value={nib}
+                      onChange={(e) => setNib(e.target.value)}
+                      maxLength={50}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="kbli">KBLI</Label>
+                    <Input
+                      id="kbli"
+                      placeholder="Kode KBLI"
+                      value={kbli}
+                      onChange={(e) => setKbli(e.target.value)}
+                      maxLength={50}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="kabupatenKota">Kabupaten/Kota</Label>
+                  <Input
+                    id="kabupatenKota"
+                    placeholder="Nama Kabupaten/Kota"
+                    value={kabupatenKota}
+                    onChange={(e) => setKabupatenKota(e.target.value)}
+                    maxLength={100}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="kecamatan">Kecamatan</Label>
+                    <Input
+                      id="kecamatan"
+                      placeholder="Nama Kecamatan"
+                      value={kecamatan}
+                      onChange={(e) => setKecamatan(e.target.value)}
+                      maxLength={100}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="desaKelurahan">Desa/Kelurahan</Label>
+                    <Input
+                      id="desaKelurahan"
+                      placeholder="Nama Desa/Kelurahan"
+                      value={desaKelurahan}
+                      onChange={(e) => setDesaKelurahan(e.target.value)}
+                      maxLength={100}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="alamat">Alamat Lengkap</Label>
+                  <Input
+                    id="alamat"
+                    placeholder="Alamat lengkap lokasi"
+                    value={alamat}
+                    onChange={(e) => setAlamat(e.target.value)}
                   />
                 </div>
 

@@ -79,14 +79,20 @@ export const appRouter = router({
     create: protectedProcedure
       .input(z.object({
         projectId: z.number(),
-        pemrakarsa: z.string().max(100),
-        kegiatan: z.string().max(254),
-        tahun: z.number().int().min(1900).max(2100),
-        provinsi: z.string().max(50),
-        keterangan: z.string().max(254),
-        layer: z.string().max(50).default("Tapak Proyek"),
+        pemrakarsa: z.string(),
+        kegiatan: z.string(),
+        tahun: z.number(),
+        provinsi: z.string(),
+        keterangan: z.string(),
+        layer: z.string().default("Tapak Proyek"),
         area: z.string(),
-        geometry: z.string(),
+        geometry: z.string(), // GeoJSON string
+        nib: z.string().optional(),
+        kbli: z.string().optional(),
+        kabupatenKota: z.string().optional(),
+        kecamatan: z.string().optional(),
+        desaKelurahan: z.string().optional(),
+        alamat: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const objectId = await db.getNextObjectId(input.projectId);
