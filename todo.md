@@ -48,3 +48,19 @@
 
 - [x] Tambahkan informasi pengguna (nama, email) di footer panel kanan
 - [x] Tambahkan tanggal pembuatan dokumen dengan format lengkap
+
+## Fitur Prioritas Sedang - Analisis Dokumen AI
+
+- [x] Upload dokumen PKKPR/NIB (PDF)
+- [x] Ekstraksi data otomatis dengan LLM (Pemrakarsa, NIB, KBLI, Lokasi, dll)
+- [x] Auto-fill form atribut dari hasil ekstraksi
+- [x] Generate KETERANGAN otomatis sesuai format
+- [x] Preview dan edit hasil ekstraksi
+
+## Fitur Prioritas Rendah
+
+- [ ] Validasi sistem koordinat otomatis berdasarkan longitude
+- [ ] Deteksi dan konversi sistem koordinat
+- [ ] Multiple polygon support per project
+- [ ] Riwayat project pengguna
+- [ ] Template project untuk kegiatan umum

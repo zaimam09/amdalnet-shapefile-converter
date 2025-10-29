@@ -216,6 +216,100 @@ export const appRouter = router({
         };
       }),
   }),
+
+  document: router({
+    analyze: protectedProcedure
+      .input(z.object({
+        fileData: z.string(), // base64 encoded PDF
+        fileName: z.string(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { fileData, fileName } = input;
+        
+        try {          
+          // Use LLM to analyze the document
+          const { invokeLLM } = await import('./_core/llm');
+          
+          const prompt = `Analisis dokumen PKKPR atau NIB berikut dan ekstrak informasi dalam format JSON.\n\nInformasi yang harus diekstrak:\n- pemrakarsa: Nama Pelaku Usaha/Pemrakarsa\n- nib: Nomor Induk Berusaha (jika ada)\n- kbli: Kode KBLI (jika ada)\n- kegiatan: Nama/Judul kegiatan atau KBLI\n- provinsi: Nama Provinsi\n- kabupatenKota: Nama Kabupaten/Kota (jika ada)\n- kecamatan: Nama Kecamatan (jika ada)\n- desaKelurahan: Nama Desa/Kelurahan (jika ada)\n- alamat: Alamat lengkap (jika ada)\n- luasTanah: Luas tanah dalam m2 atau ha (jika ada)\n- tahun: Tahun dari tanggal dokumen\n\nPenting:\n- Jika tidak ada data, isi dengan string kosong \"\"\n- Untuk tahun, ambil dari tanggal dokumen atau tahun saat ini\n- Untuk kegiatan, gunakan judul KBLI atau deskripsi kegiatan yang ada\n\nDokumen: ${fileName}`;
+
+          const response = await invokeLLM({
+            messages: [
+              { role: 'system', content: 'Anda adalah asisten yang ahli dalam mengekstrak data dari dokumen PKKPR dan NIB. Berikan output dalam format JSON yang valid.' },
+              { 
+                role: 'user', 
+                content: [
+                  { type: 'text', text: prompt },
+                  { 
+                    type: 'file_url', 
+                    file_url: { 
+                      url: `data:application/pdf;base64,${fileData}`,
+                      mime_type: 'application/pdf'
+                    } 
+                  }
+                ]
+              }
+            ],
+            response_format: {
+              type: 'json_schema',
+              json_schema: {
+                name: 'document_extraction',
+                strict: true,
+                schema: {
+                  type: 'object',
+                  properties: {
+                    pemrakarsa: { type: 'string' },
+                    nib: { type: 'string' },
+                    kbli: { type: 'string' },
+                    kegiatan: { type: 'string' },
+                    provinsi: { type: 'string' },
+                    kabupatenKota: { type: 'string' },
+                    kecamatan: { type: 'string' },
+                    desaKelurahan: { type: 'string' },
+                    alamat: { type: 'string' },
+                    luasTanah: { type: 'string' },
+                    tahun: { type: 'number' },
+                  },
+                  required: ['pemrakarsa', 'kegiatan', 'provinsi', 'tahun'],
+                  additionalProperties: false,
+                },
+              },
+            },
+          });
+
+          const messageContent = response.choices[0].message.content;
+          const contentText = typeof messageContent === 'string' ? messageContent : JSON.stringify(messageContent);
+          const extractedData = JSON.parse(contentText || '{}');
+          
+          // Generate KETERANGAN based on location data
+          let keterangan = '';
+          if (extractedData.alamat) {
+            keterangan = `Untuk tapak proyek dalam satu wilayah Kab/Kota, diisi dengan alamat lokasi ${extractedData.alamat}.`;
+          } else if (extractedData.kabupatenKota) {
+            keterangan = `Lokasi di ${extractedData.kabupatenKota}, ${extractedData.provinsi}.`;
+          } else {
+            keterangan = `Lokasi di Provinsi ${extractedData.provinsi}.`;
+          }
+          
+          return {
+            pemrakarsa: extractedData.pemrakarsa || '',
+            kegiatan: extractedData.kegiatan || '',
+            tahun: extractedData.tahun || new Date().getFullYear(),
+            provinsi: extractedData.provinsi || '',
+            keterangan,
+            nib: extractedData.nib || '',
+            kbli: extractedData.kbli || '',
+            kabupatenKota: extractedData.kabupatenKota || '',
+            kecamatan: extractedData.kecamatan || '',
+            desaKelurahan: extractedData.desaKelurahan || '',
+            alamat: extractedData.alamat || '',
+            luasTanah: extractedData.luasTanah || '',
+          };
+        } catch (error) {
+          console.error('Error analyzing document:', error);
+          throw new Error('Gagal menganalisis dokumen. Pastikan file PDF valid.');
+        }
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

@@ -10,6 +10,7 @@ import { useLocation, useRoute } from "wouter";
 import { toast } from "sonner";
 import MapEditor from "@/components/MapEditor";
 import FileUploader from "@/components/FileUploader";
+import DocumentAnalyzer from "@/components/DocumentAnalyzer";
 import { getLoginUrl } from "@/const";
 
 export default function ProjectEditor() {
@@ -21,6 +22,7 @@ export default function ProjectEditor() {
   const [currentGeometry, setCurrentGeometry] = useState<any>(null);
   const [currentArea, setCurrentArea] = useState<string>("");
   const [currentPolygonId, setCurrentPolygonId] = useState<number | null>(null);
+  const [showDocAnalyzer, setShowDocAnalyzer] = useState(false);
 
   // Form state
   const [pemrakarsa, setPemrakarsa] = useState("");
@@ -270,6 +272,29 @@ export default function ProjectEditor() {
                 }
               }}
             />
+            
+            <div>
+              <Button
+                variant="outline"
+                onClick={() => setShowDocAnalyzer(!showDocAnalyzer)}
+                className="w-full mb-4"
+              >
+                {showDocAnalyzer ? 'Sembunyikan' : 'Tampilkan'} Analisis Dokumen AI
+              </Button>
+              
+              {showDocAnalyzer && (
+                <DocumentAnalyzer
+                  onDataExtracted={(data) => {
+                    setPemrakarsa(data.pemrakarsa);
+                    setKegiatan(data.kegiatan);
+                    setTahun(data.tahun);
+                    setProvinsi(data.provinsi);
+                    setKeterangan(data.keterangan);
+                    toast.success('Data berhasil diisi otomatis dari dokumen');
+                  }}
+                />
+              )}
+            </div>
             
             <Card>
               <CardHeader>
