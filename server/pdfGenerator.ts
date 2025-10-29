@@ -221,9 +221,9 @@ function drawRightPanel(
   let currentY = y;
   const sectionPadding = 0; // No padding to eliminate gaps
   
-  // Calculate proportional heights to fill entire panel
+  // Calculate proportional heights to fill entire panel (802pt total)
   const totalHeight = height;
-  const section1Height = Math.floor(totalHeight * 0.12); // 12% for title
+  const section1Height = 100; // Fixed height for title
   doc.rect(x, currentY, width, section1Height)
     .fillColor('#ffffff')
     .fill()
@@ -246,7 +246,7 @@ function drawRightPanel(
   currentY += section1Height;
   
   // === SECTION 2: Technical Info ===
-  const section2Height = Math.floor(totalHeight * 0.13); // 13% for technical info
+  const section2Height = 110; // Fixed height for technical info
   doc.rect(x, currentY, width, section2Height)
     .fillColor('#ffffff')
     .fill()
@@ -275,7 +275,7 @@ function drawRightPanel(
   currentY += section2Height;
   
   // === SECTION 3: KETERANGAN + Coordinate Table ===
-  const section3Height = Math.floor(totalHeight * 0.35); // 35% for keterangan + table
+  const section3Height = 280; // Fixed height for keterangan + table
   doc.rect(x, currentY, width, section3Height)
     .fillColor('#ffffff')
     .fill()
@@ -407,7 +407,7 @@ function drawRightPanel(
   currentY += section3Height;
   
   // === SECTION 4: Inset Map (Peta Orientasi Indonesia) ===
-  const section4Height = Math.floor(totalHeight * 0.25); // 25% for inset map
+  const section4Height = 180; // Fixed height for inset map
   doc.rect(x, currentY, width, section4Height)
     .fillColor('#ffffff')
     .fill()

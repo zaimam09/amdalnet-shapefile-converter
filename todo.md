@@ -94,3 +94,9 @@
 - [x] Masih ada space kosong besar di panel kanan
 - [x] Tinggi section tidak proporsional mengisi seluruh panel
 - [x] Perlu menyesuaikan tinggi section 3, 4, 5 agar tidak ada gap
+
+## Bug Critical
+
+- [x] PDF panel kanan masih ada space kosong besar
+- [x] Data atribut tambahan (NIB, KBLI, Kabupaten, Kecamatan, Desa, Alamat) tidak tersimpan saat update polygon
+- [x] Mutation update polygon perlu include semua field baru

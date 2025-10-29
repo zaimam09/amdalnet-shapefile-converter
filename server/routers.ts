@@ -114,6 +114,12 @@ export const appRouter = router({
         layer: z.string().max(50).optional(),
         area: z.string().optional(),
         geometry: z.string().optional(),
+        nib: z.string().optional(),
+        kbli: z.string().optional(),
+        kabupatenKota: z.string().optional(),
+        kecamatan: z.string().optional(),
+        desaKelurahan: z.string().optional(),
+        alamat: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
         const { id, ...data } = input;
